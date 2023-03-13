@@ -14,7 +14,7 @@ app.post('/tokenGenerate', (req, res) => {
         username: 'AugFreshers22',
         email: 'augfresh22@coding.com'
     }
-    jwt.sign(user, 'secretkey', function(err, token) {
+    jwt.sign(user, 'secretkey', {expiresIn: '60s'}, function(err, token) {
         if(err){
             res.sendStatus(403)
         }
@@ -23,9 +23,33 @@ app.post('/tokenGenerate', (req, res) => {
                 token
             })
         }
-      });
-      
+      });    
 })
+
+app.post('/verifyToken', extractToken, (req, res) => {
+    jwt.verify(req.token, 'secretkey', function(err, data) {
+        if(err){
+            res.sendStatus(403);
+        }
+        else{
+            res.json({message: 'User access granted', data})
+        }
+      });
+})
+
+function extractToken(req, res, next){
+    const bearerHeader = req.headers['authorization']; // Bearer token
+    if(bearerHeader !== undefined){
+        const bearer = bearerHeader.split(' '); // ['Bearer', 'token']
+        const bearerToken = bearer[1];
+        req.token = bearerToken
+        next();
+    }
+    else{
+        res.sendStatus(403);
+    }
+}
+
 
 app.listen(port, function(err){
     if(err){
